@@ -1,5 +1,6 @@
+import day_1
 import gleam/io
 
 pub fn main() {
-  io.println("Hello from aoc_2025!")
+  echo day_1.part_1()
 }
