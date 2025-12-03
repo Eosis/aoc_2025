@@ -5,4 +5,5 @@ pub fn main() {
   echo day_1.part_1()
   echo day_1.part_2()
   echo day_2.part_1()
+  echo day_2.part_2()
 }

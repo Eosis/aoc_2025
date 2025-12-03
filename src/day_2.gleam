@@ -24,7 +24,10 @@ pub fn part_2() -> Int {
 }
 
 pub fn do_part_2(input: String) -> Int {
-  todo
+  parse_input(input)
+  |> generate_list_to_test
+  |> list.filter(keeping: at_least_doubly_repeaty)
+  |> int.sum
 }
 
 pub type Range {
@@ -34,7 +37,6 @@ pub type Range {
 pub fn parse_input(input: String) -> List(Range) {
   input
   |> string.split(",")
-  |> echo
   |> list.map(string.trim)
   |> list.map(parse_range)
 }
@@ -82,5 +84,42 @@ pub fn is_repeaty(input: Int) -> Bool {
       start == end
     }
     _ -> panic as "Compiler too dumb to work out this is unrepresentable"
+  }
+}
+
+pub fn at_least_doubly_repeaty(input: Int) -> Bool {
+  let as_string = int.to_string(input)
+  let length = string.length(as_string)
+  case string.length(as_string) {
+    0 | 1 -> False
+    _ ->
+      as_string
+      |> prefixes_til_half
+      |> list.any(fn(prefix) { is_repeats_of(as_string, prefix) })
+  }
+}
+
+pub fn prefixes_til_half(input: String) -> List(String) {
+  list.range(1, string.length(input) / 2)
+  |> list.map(fn(to_take) { string.slice(input, at_index: 0, length: to_take) })
+}
+
+pub fn is_repeats_of(to_check to_check: String, of of: String) -> Bool {
+  case to_check == of {
+    // base case
+    True -> True
+    False -> {
+      case string.starts_with(to_check, of) {
+        True ->
+          is_repeats_of(
+            to_check: string.drop_start(
+              from: to_check,
+              up_to: string.length(of),
+            ),
+            of:,
+          )
+        False -> False
+      }
+    }
   }
 }

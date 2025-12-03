@@ -40,3 +40,20 @@ pub fn are_repeaty_test() {
   day_2.is_repeaty(11)
   |> should.be_true
 }
+
+pub fn at_least_doubly_repeaty_test() {
+  day_2.at_least_doubly_repeaty(123_123)
+  |> should.be_true
+  day_2.at_least_doubly_repeaty(1_111_111)
+  |> should.be_true
+  day_2.at_least_doubly_repeaty(431_231)
+  |> should.be_false
+  day_2.at_least_doubly_repeaty(1_188_511_885)
+  |> should.be_true
+  day_2.at_least_doubly_repeaty(1)
+  |> should.be_false
+  day_2.at_least_doubly_repeaty(12)
+  |> should.be_false
+  day_2.at_least_doubly_repeaty(121)
+  |> should.be_false
+}
