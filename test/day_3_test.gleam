@@ -20,3 +20,8 @@ pub fn parsing_test() {
     [8, 1, 8, 1, 8, 1, 9, 1, 1, 1, 1, 2, 1, 1, 1],
   ])
 }
+
+pub fn part_2_test() {
+  day_3.do_part_2(test_input)
+  |> should.equal(3_121_910_778_619)
+}

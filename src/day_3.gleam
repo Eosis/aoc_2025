@@ -22,7 +22,12 @@ pub fn part_2() -> Int {
 }
 
 pub fn do_part_2(input: String) -> Int {
-  todo
+  parse_input(input)
+  |> list.map(get_best_values([], _, 12))
+  |> list.map(fn(inner) {
+    list.fold(inner, 0, fn(acc, item) { { acc * 10 } + item })
+  })
+  |> int.sum
 }
 
 pub fn parse_input(input: String) -> List(List(Int)) {
@@ -50,4 +55,18 @@ fn get_best_value(input: List(Int)) -> Int {
     rem
     |> list.max(int.compare)
   tens * 10 + units
+}
+
+fn get_best_values(acc: List(Int), input: List(Int), nth: Int) -> List(Int) {
+  case nth {
+    0 -> list.reverse(acc)
+    n -> {
+      let drop_from_end = n - 1
+      let assert Ok(#(digit, idx)) =
+        list.take(input, list.length(input) - drop_from_end)
+        |> list.index_map(fn(val, idx) { #(val, idx) })
+        |> list.max(fn(a, b) { int.compare(a.0, b.0) })
+      get_best_values([digit, ..acc], list.drop(input, idx + 1), n - 1)
+    }
+  }
 }
