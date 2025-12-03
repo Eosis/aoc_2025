@@ -1,7 +1,6 @@
 import gleam.{type Int}
 import gleam/int
 import gleam/list
-import gleam/order.{Eq, Gt, Lt}
 import gleam/result
 import gleam/string
 import simplifile
@@ -89,7 +88,6 @@ pub fn is_repeaty(input: Int) -> Bool {
 
 pub fn at_least_doubly_repeaty(input: Int) -> Bool {
   let as_string = int.to_string(input)
-  let length = string.length(as_string)
   case string.length(as_string) {
     0 | 1 -> False
     _ ->

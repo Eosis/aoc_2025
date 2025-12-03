@@ -1,5 +1,4 @@
 import gleam.{type Int}
-import gleam/function
 import gleam/int
 import gleam/list
 import gleam/string

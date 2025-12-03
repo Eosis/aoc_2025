@@ -1,6 +1,5 @@
 import day_1.{L, R, ResultAndHits}
 import gleeunit/should
-import simplifile
 
 pub fn parsing_test() {
   "L41
