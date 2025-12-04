@@ -130,7 +130,7 @@ pub fn parsing_test() {
 
 pub fn part_2_test() {
   day_4.do_part_2(test_input)
-  |> todo
+  |> should.equal(43)
 }
 
 pub fn surrounding_coordinates_test() {

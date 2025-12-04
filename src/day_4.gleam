@@ -23,8 +23,44 @@ pub fn part_2() -> Int {
 }
 
 pub fn do_part_2(input: String) -> Int {
-  let Floor(bounds:, locations:) as floor = parse_input(input)
-  todo
+  parse_input(input)
+  |> count_total_removable
+}
+
+fn count_total_removable(floor: Floor) -> Int {
+  do_count_total_removable(0, floor)
+}
+
+fn do_count_total_removable(acc: Int, floor: Floor) -> Int {
+  let removable =
+    generate_locations_to_check(floor)
+    |> list.map(fn(location) {
+      #(location, count_neighbouring_rolls(location, floor))
+    })
+    |> list.filter(fn(location_status) { location_status.1 < 4 })
+  let number_to_remove = list.length(removable)
+
+  case number_to_remove {
+    0 -> acc
+    _ -> {
+      let locations_to_remove = list.map(removable, fn(tup) { tup.0 })
+      let after_removal =
+        free_up_locations(floor.locations, locations_to_remove)
+      do_count_total_removable(
+        acc + number_to_remove,
+        Floor(bounds: floor.bounds, locations: after_removal),
+      )
+    }
+  }
+}
+
+fn free_up_locations(
+  floor_locations: Dict(#(Int, Int), Location),
+  to_remove: List(#(Int, Int)),
+) -> Dict(#(Int, Int), Location) {
+  list.fold(over: to_remove, from: floor_locations, with: fn(acc, location) {
+    dict.upsert(acc, location, fn(_) { Free })
+  })
 }
 
 pub type Floor {
