@@ -1,7 +1,6 @@
 import day_4.{Floor, Free, Roll}
 import gleam/dict
 import gleeunit/should
-import pprint
 
 const test_input = "..@@.@@@@.
 @@@.@.@.@@

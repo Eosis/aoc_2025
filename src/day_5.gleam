@@ -4,7 +4,6 @@ import gleam/int
 import gleam/list
 import gleam/order.{Eq, Gt, Lt}
 import gleam/result
-import gleam/set.{type Set}
 import gleam/string
 import simplifile
 
@@ -35,11 +34,6 @@ pub fn do_part_2(input: String) -> Int {
   |> de_overlap_ranges
   |> list.map(size_of_range)
   |> int.sum
-}
-
-fn add_range_to_set(set: Set(Int), range: Range) -> Set(Int) {
-  list.range(range.low, range.high)
-  |> list.fold(from: set, with: fn(acc, a) { set.insert(acc, a) })
 }
 
 pub type Range {
