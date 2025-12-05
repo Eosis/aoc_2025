@@ -80,7 +80,13 @@ pub fn de_overlap_ranges_test() {
     Range(90, 120),
   ]
   |> day_5.de_overlap_ranges
-  |> echo
+  |> should.equal([
+    Range(90, 120),
+    Range(58, 65),
+    Range(30, 36),
+    Range(15, 20),
+    Range(1, 10),
+  ])
 }
 
 pub fn de_overlap_test() {
