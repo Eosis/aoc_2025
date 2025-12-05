@@ -32,10 +32,9 @@ pub fn part_2() -> Int {
 pub fn do_part_2(input: String) -> Int {
   let input = parse_input(input)
   input.0
-  |> list.fold(from: set.new(), with: fn(acc, range) {
-    add_range_to_set(acc, range)
-  })
-  |> set.size
+  |> de_overlap_ranges
+  |> list.map(size_of_range)
+  |> int.sum
 }
 
 fn add_range_to_set(set: Set(Int), range: Range) -> Set(Int) {
@@ -77,4 +76,47 @@ pub fn parse_input(input: String) -> #(List(Range), List(Int)) {
     |> list.map(int.parse)
     |> result.partition
   #(parsed_ranges, used)
+}
+
+pub fn overlapping(a: Range, b: Range) -> Bool {
+  case int.compare(a.low, b.low) {
+    Gt -> overlapping(b, a)
+    // a defo starts earlier or at b
+    Eq | Lt ->
+      case int.compare(a.high, b.low) {
+        Lt -> False
+        Eq -> True
+        Gt -> True
+      }
+  }
+}
+
+pub fn de_overlap(a: Range, b: Range) -> Range {
+  let low = int.min(a.low, b.low)
+  let high = int.max(a.high, b.high)
+  Range(low:, high:)
+}
+
+pub fn de_overlap_ranges(ranges: List(Range)) -> List(Range) {
+  ranges
+  |> list.sort(fn(a, b) { int.compare(a.low, b.low) })
+  |> list.fold(from: [], with: fn(acc, next) {
+    case acc {
+      [] -> [next]
+      [first, ..rest] ->
+        case overlapping(first, next) {
+          True -> {
+            let new = de_overlap(first, next)
+            [new, ..rest]
+          }
+          False -> {
+            [next, ..acc]
+          }
+        }
+    }
+  })
+}
+
+fn size_of_range(range: Range) -> Int {
+  { range.high - range.low } + 1
 }
