@@ -17,11 +17,6 @@ pub fn part_1_test() {
   |> should.equal(4_277_556)
 }
 
-pub fn playing_with_re_test() {
-  echo string.split("45 64  387 23", " ")
-  echo string.split("  6 98  215 314", " ")
-}
-
 pub fn part_2_test() {
   day_6.do_part_2(test_input)
   |> should.equal(3_263_827)
