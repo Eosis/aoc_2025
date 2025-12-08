@@ -17,4 +17,5 @@ pub fn main() {
   echo day_5.part_1()
   echo day_5.part_2()
   echo day_6.part_1()
+  echo day_6.part_2()
 }
