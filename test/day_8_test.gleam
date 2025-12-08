@@ -28,5 +28,6 @@ pub fn part_1_test() {
 }
 
 pub fn part_2_test() {
-  echo "YUP"
+  day_8.do_part_2(test_input)
+  |> should.equal(25_272)
 }

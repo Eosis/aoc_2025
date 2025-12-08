@@ -3,7 +3,9 @@ import gleam.{type Int}
 import gleam/dict.{type Dict}
 import gleam/float
 import gleam/int
-import gleam/list
+import gleam/list.{type ContinueOrStop, Continue, Stop}
+import gleam/option.{type Option, None, Some}
+
 import gleam/order
 import gleam/set.{type Set}
 import gleam/string
@@ -20,9 +22,7 @@ pub fn do_part_1(input: String, number: Int) -> Int {
   parse_input(input)
   |> get_distances_of_pairs()
   |> get_n_shortest_connections(number)
-  |> pprint.debug
   |> list.fold(from: circuits, with: add_connection_to_circuits)
-  |> pprint.debug
   |> dict.to_list
   |> list.sort(
     order.reverse(fn(a, b) {
@@ -30,7 +30,6 @@ pub fn do_part_1(input: String, number: Int) -> Int {
       int.compare(set.size(a), set.size(b))
     }),
   )
-  |> pprint.debug
   |> list.take(3)
   |> list.map(fn(entry) { set.size(entry.1) })
   |> int.product
@@ -42,7 +41,43 @@ pub fn part_2() -> Int {
 }
 
 pub fn do_part_2(input: String) -> Int {
-  todo
+  let all_points = parse_input(input)
+  let #(_, last_connection) =
+    all_points
+    |> get_distances_of_pairs()
+    |> list.sort(fn(a, b) { float.compare(a.distance, b.distance) })
+    |> list.fold_until(from: #(dict.new(), None), with: fn(acc, connection) {
+      add_connections_until_big_mess(acc, connection, list.length(all_points))
+    })
+  case last_connection {
+    None -> panic as "you wot"
+    Some(connection) -> connection.a.x * connection.b.x
+  }
+}
+
+fn add_connections_until_big_mess(
+  acc acc: #(Dict(Int, Set(Point)), Option(Connection)),
+  connection connection: Connection,
+  end_at total_number: Int,
+) {
+  let after_add =
+    acc.0
+    |> add_connection_to_circuits(connection)
+  case dict.size(after_add) {
+    1 -> {
+      let number_connected =
+        dict.values(after_add)
+        |> list.map(fn(circuit) { set.size(circuit) })
+        |> int.sum
+      case number_connected == total_number {
+        True -> Stop(#(after_add, Some(connection)))
+        False -> Continue(#(after_add, None))
+      }
+    }
+    _ -> {
+      Continue(#(after_add, None))
+    }
+  }
 }
 
 fn parse_input(input: String) -> List(Point) {
