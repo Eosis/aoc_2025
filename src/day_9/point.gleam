@@ -6,10 +6,11 @@ pub type Point {
   Point(x: Int, y: Int)
 }
 
-// give these things an ordering
+// give these things an ordering, y first, then x...
+// Just for top-down stuff.
 pub fn compare(a: Point, b: Point) -> Order {
-  case int.compare(a.x, b.x) {
-    Eq -> int.compare(a.y, b.y)
+  case int.compare(a.y, b.y) {
+    Eq -> int.compare(a.x, b.x)
     otherwise -> otherwise
   }
 }
