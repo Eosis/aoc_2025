@@ -93,12 +93,12 @@ fn to_rectangles(points: List(Point)) -> List(Rectangle) {
 
 // Note + 1 here...
 pub fn to_rectangle(points: #(Point, Point)) -> Rectangle {
-  let #(a, b) = echo points
+  let #(a, b) = points
   let width = int.absolute_value({ a.x - b.x } + 1)
   let height = int.absolute_value({ a.y - b.y } + 1)
   // assuming top-left is min y, min x
   let top_left = Point(x: int.min(a.x, b.x), y: int.min(a.y, b.y))
-  echo Rectangle(top_left:, width:, height:) as "sexy rectangle"
+  Rectangle(top_left:, width:, height:)
 }
 
 pub fn rectangle_edges(rect: Rectangle) -> List(Edge) {
@@ -150,8 +150,7 @@ pub fn intersects(a a: Edge, b b: Edge) -> Bool {
     False, True -> {
       let a_y = a.a.y
       let b_x = b.a.x
-      { echo a_y >= b.a.y as "a" && echo a_y <= b.b.y as "b" }
-      && { echo a.a.x < b_x as "c" && echo a.b.x > b_x as "d" }
+      { a_y >= b.a.y && a_y <= b.b.y } && { a.a.x < b_x && a.b.x > b_x }
     }
   }
 }

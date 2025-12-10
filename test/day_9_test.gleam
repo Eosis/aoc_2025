@@ -32,7 +32,7 @@ pub fn normalize_edge_test() {
   |> should.equal(Edge(Point(34, 35), Point(34, 36)))
 }
 
-pub fn intersects_test() {
+fn intersects_test() {
   // .|.
   // ---
   // .|.
