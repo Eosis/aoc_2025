@@ -1,5 +1,6 @@
 import day_1
 import day_10
+import day_11
 import day_2
 import day_3
 import day_4
@@ -25,5 +26,6 @@ pub fn main() {
   // echo day_8.part_2()
   // echo day_9.part_1()
   // echo day_9.part_2()
-  echo day_10.part_1()
+  // echo day_10.part_1()
+  echo day_11.part_1()
 }
