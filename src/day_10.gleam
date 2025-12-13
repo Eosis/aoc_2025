@@ -29,7 +29,11 @@ pub fn do_part_2(input: String) -> Int {
 }
 
 pub type MachineDescription {
-  MachineDescription(lights: Array(Bool), buttons: List(List(Int)), wot: Nil)
+  MachineDescription(
+    lights: Array(Bool),
+    buttons: List(List(Int)),
+    joltage: List(Int),
+  )
 }
 
 pub fn parse_input(input: String) -> List(MachineDescription) {
@@ -43,7 +47,7 @@ pub fn parse_input(input: String) -> List(MachineDescription) {
     MachineDescription(
       lights: glearray.from_list(parse_lights(lights)),
       buttons: parse_buttons(buttons),
-      wot: Nil,
+      joltage: [],
     )
   })
 }
@@ -73,7 +77,7 @@ fn parse_buttons(descriptions: List(String)) -> List(List(Int)) {
 }
 
 fn find_best(md: MachineDescription) -> Int {
-  let MachineDescription(lights: desired_lights, buttons:, wot:) = md
+  let MachineDescription(_, lights: desired_lights, buttons:) = md
 
   // fold until one found
   list.range(1, list.length(buttons))
@@ -134,7 +138,7 @@ fn toggle_lights_from_button_press(
 }
 
 pub fn format_machine_description(md: MachineDescription) -> String {
-  let MachineDescription(lights:, buttons:, wot:) = md
+  let MachineDescription(_, lights:, buttons:) = md
   let lights = glearray.to_list(lights)
   pprint.format(lights) <> "\n" <> pprint.format(buttons)
 }
