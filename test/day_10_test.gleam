@@ -1,6 +1,8 @@
-import day_10.{MachineDescription}
-import gleam/io
-import gleam/list
+import atto
+import atto/text
+import day_10
+import day_10/input_parser
+import day_10/machine_description.{MachineDescription}
 import glearray
 import gleeunit/should
 import pprint
@@ -15,82 +17,43 @@ pub fn part_1_test() {
 }
 
 pub fn part_2_test() {
-  Ok(Nil)
-}
-
-pub fn parse_input_test() {
-  test_input
-  |> day_10.parse_input
-  |> list.map(day_10.format_machine_description)
+  todo
+  day_10.do_part_2(test_input)
   |> pprint.debug
 }
 
-import atto
-import atto/ops
-import atto/text
-import atto/text_util
-
-pub fn better_parser_test() {
-  echo atto.run(buttons(), text.new("(8,0,1,3) (8,1,2)"), Nil)
-  echo atto.run(
-    machine_description(),
-    text.new("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}"),
-    Nil,
-  )
-}
-
-fn machine_description() {
-  use <- atto.label("Machine Description")
-  use lights <- atto.do(lights())
-  use buttons <- atto.do(buttons())
-  use joltage <- atto.do(joltage() |> text_util.ws())
-  let lights = glearray.from_list(lights)
-  atto.pure(MachineDescription(lights:, buttons:, joltage:))
-}
-
-fn lights() {
-  use <- atto.label("Lights")
-  ops.between(
-    atto.token("[") |> text_util.ws(),
-    ops.some(ops.choice([atto.token("#"), atto.token(".")])),
-    atto.token("]") |> text_util.ws(),
-  )
-  |> atto.map(fn(inner) {
-    inner
-    |> list.map(fn(choose) {
-      case choose {
-        "#" -> True
-        "." -> False
-        _ -> panic as "Invalid input, should be caught by the parser"
-      }
-    })
-  })
-}
-
-fn buttons() {
-  use <- atto.label("Button")
-
-  let button =
-    ops.between(
-      atto.token("(") |> text_util.ws(),
-      ops.sep1(
-        text_util.decimal() |> text_util.ws(),
-        atto.token(",") |> text_util.ws(),
+pub fn parse_input_test() {
+  todo
+  test_input
+  |> text.new
+  |> atto.run(input_parser.day_10_input(), _, Nil)
+  |> should.equal(
+    Ok([
+      MachineDescription(
+        glearray.from_list([False, True, True, False]),
+        [[3], [1, 3], [2], [2, 3], [0, 2], [0, 1]],
+        [3, 5, 4, 7],
       ),
-      atto.token(")") |> text_util.ws(),
-    )
-
-  ops.sep1(button, text_util.hspaces())
+      MachineDescription(
+        glearray.from_list([False, False, False, True, False]),
+        [[0, 2, 3, 4], [2, 3], [0, 4], [0, 1, 2], [1, 2, 3, 4]],
+        [7, 5, 12, 7, 2],
+      ),
+      MachineDescription(
+        glearray.from_list([False, True, True, True, False, True]),
+        [[0, 1, 2, 3, 4], [0, 3, 4], [0, 1, 2, 4, 5], [1, 2]],
+        [10, 11, 11, 5, 10, 5],
+      ),
+    ]),
+  )
 }
 
-fn joltage() {
-  use <- atto.label("Joltage")
-  ops.between(
-    atto.token("{") |> text_util.ws(),
-    ops.sep1(
-      text_util.decimal() |> text_util.ws(),
-      atto.token(",") |> text_util.ws(),
+pub fn best_presses_test() {
+  echo day_10.work_out_best_presses(
+    MachineDescription(
+      glearray.from_list([False, True, True, False]),
+      [[3], [1, 3], [2], [2, 3], [0, 2], [0, 1]],
+      [1, 0, 2, 1],
     ),
-    atto.token("}") |> text_util.ws(),
   )
 }

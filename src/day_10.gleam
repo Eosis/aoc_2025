@@ -1,10 +1,17 @@
+import atto
+import atto/text
+import day_10/input_parser
+import day_10/machine_description.{type MachineDescription, MachineDescription}
+import gleam/bool
+import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list.{Continue, Stop}
+import gleam/option.{None, Some}
+import gleam/order
 import gleam/result
 import gleam/string
 import glearray.{type Array}
 import pprint
-
 import simplifile
 
 pub fn part_1() -> Int {
@@ -18,22 +25,119 @@ pub fn part_2() -> Int {
 }
 
 pub fn do_part_1(input: String) -> Int {
-  parse_input(input)
+  let assert Ok(mds) =
+    atto.run(input_parser.day_10_input(), text.new(input), Nil)
+  mds
   |> list.map(find_best)
   |> int.sum
 }
 
 pub fn do_part_2(input: String) -> Int {
-  parse_input(input)
-  |> todo
+  let assert Ok(mds) =
+    atto.run(input_parser.day_10_input(), text.new(input), Nil)
+  mds
+  |> list.map(work_out_best_presses)
+  |> int.sum
 }
 
-pub type MachineDescription {
-  MachineDescription(
-    lights: Array(Bool),
-    buttons: List(List(Int)),
-    joltage: List(Int),
-  )
+pub fn work_out_best_presses(machine: MachineDescription) -> Int {
+  let initial_joltage =
+    list.index_map(machine.joltage, fn(_, idx) { #(idx, 0) })
+    |> dict.from_list
+  case do_work_out_best_presses(Running(0), machine, initial_joltage, []) {
+    Done(presses) -> presses
+    _ -> panic as "This should not happen"
+  }
+}
+
+pub type State {
+  Running(presses: Int)
+  Done(presses: Int)
+  Blown
+}
+
+fn get_presses(state: State) -> Int {
+  case state {
+    Blown -> panic as "Shouldn't get called when blown"
+    Running(presses) | Done(presses) -> presses
+  }
+}
+
+fn increment_presses(state: State) -> State {
+  case state {
+    Blown -> Blown
+    Running(presses) -> Running(presses + 1)
+    _ -> panic as "Shouldn't increment a done thing"
+  }
+}
+
+fn do_work_out_best_presses(
+  presses_state: State,
+  machine: MachineDescription,
+  joltage: Dict(Int, Int),
+  chosen: List(Int),
+) -> State {
+  let desired =
+    list.index_map(machine.joltage, fn(item, idx) { #(idx, item) })
+    |> dict.from_list
+  use <- bool.lazy_guard(when: desired == joltage, return: fn() {
+    echo Done(get_presses(presses_state))
+  })
+  use <- bool.lazy_guard(when: blown(joltage, desired), return: fn() {
+    echo Blown
+  })
+
+  echo chosen as "Continuing..."
+  let new_state = increment_presses(presses_state)
+  // Press all in turn and descend in.
+  let result =
+    machine.buttons
+    |> list.index_map(fn(effects, idx) {
+      let new_chosen = [idx, ..chosen]
+      let joltages_after_press =
+        list.fold(from: joltage, over: effects, with: increment_joltages)
+      do_work_out_best_presses(
+        new_state,
+        machine,
+        joltages_after_press,
+        new_chosen,
+      )
+    })
+    |> list.filter(fn(state) {
+      case state {
+        Done(_) -> True
+        _ -> False
+      }
+    })
+    |> list.sort(fn(a, b) {
+      let a = get_presses(a)
+      let b = get_presses(b)
+      order.reverse(int.compare)(a, b)
+    })
+    |> list.first
+
+  case result {
+    Error(Nil) -> Blown
+    Ok(inner) -> inner
+  }
+}
+
+fn increment_joltages(current: Dict(Int, Int), to_inc: Int) -> Dict(Int, Int) {
+  dict.upsert(current, to_inc, fn(entry) {
+    case entry {
+      None -> panic as "We should always be incrementing a thing already there"
+      Some(joltage) -> joltage + 1
+    }
+  })
+}
+
+fn blown(current: Dict(Int, Int), desired: Dict(Int, Int)) -> Bool {
+  let assert Ok(zipped) =
+    list.strict_zip(dict.to_list(current), dict.to_list(desired))
+  list.any(in: zipped, satisfying: fn(item) {
+    let #(#(_, current), #(_, desired)) = item
+    current > desired
+  })
 }
 
 pub fn parse_input(input: String) -> List(MachineDescription) {
