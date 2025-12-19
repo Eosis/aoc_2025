@@ -9,7 +9,6 @@ import gleam/list.{Continue, Stop}
 import gleam/option.{None, Some}
 import gleam/order
 import gleam/result
-import gleam/string
 import glearray.{type Array}
 import pprint
 import simplifile
@@ -140,46 +139,6 @@ fn blown(current: Dict(Int, Int), desired: Dict(Int, Int)) -> Bool {
   })
 }
 
-pub fn parse_input(input: String) -> List(MachineDescription) {
-  input
-  |> string.split("\n")
-  |> list.map(fn(line) {
-    let parts = string.split(line, " ")
-    let #(lights, rest) = list.split(parts, 1)
-    let assert Ok(lights) = list.first(lights)
-    let #(buttons, _wot) = list.split(rest, { list.length(rest) - 1 })
-    MachineDescription(
-      lights: glearray.from_list(parse_lights(lights)),
-      buttons: parse_buttons(buttons),
-      joltage: [],
-    )
-  })
-}
-
-fn parse_lights(description: String) -> List(Bool) {
-  let description = string.to_graphemes(description)
-  let #(_, rest) = list.split(description, 1)
-  let #(lights, _) = list.split(rest, { list.length(rest) - 1 })
-  list.map(lights, fn(light) {
-    case light {
-      "#" -> True
-      "." -> False
-      _ -> panic as "Invalid input!"
-    }
-  })
-}
-
-fn parse_buttons(descriptions: List(String)) -> List(List(Int)) {
-  list.map(descriptions, fn(description) {
-    description
-    |> string.slice(1, string.length(description) - 2)
-    |> string.split(",")
-    |> list.map(int.parse)
-    |> result.all
-    |> result.lazy_unwrap(fn() { panic as "Not okay, man" })
-  })
-}
-
 fn find_best(md: MachineDescription) -> Int {
   let MachineDescription(_, lights: desired_lights, buttons:) = md
 
@@ -204,25 +163,39 @@ fn attempt_solution_with_n_presses(
   desired: Array(Bool),
   buttons: List(List(Int)),
 ) -> Bool {
-  list.combinations(buttons, to_take)
-  |> list.map(apply_button_presses(glearray.length(desired)))
+  let button_map =
+    list.index_map(buttons, fn(item, idx) { #(idx, item) })
+    |> dict.from_list
+    |> echo
+  list.combinations(
+    list.range(from: 0, to: { dict.size(button_map) - 1 }),
+    to_take,
+  )
+  |> list.map(apply_button_presses(_, glearray.length(desired), button_map))
   |> list.any(fn(result) { result == desired })
 }
 
 fn apply_button_presses(
+  presses: List(Int),
   number_of_lights: Int,
-) -> fn(List(List(Int))) -> Array(Bool) {
-  fn(presses: List(List(Int))) {
-    let initial: Array(Bool) =
-      list.range(1, number_of_lights)
-      |> list.map(fn(_) { False })
-      |> glearray.from_list
-    list.fold(
-      over: presses,
-      from: initial,
-      with: toggle_lights_from_button_press,
-    )
-  }
+  button_map: Dict(Int, List(Int)),
+) -> Array(Bool) {
+  let initial: Array(Bool) =
+    list.range(1, number_of_lights)
+    |> list.map(fn(_) { False })
+    |> glearray.from_list
+  let lights_to_inc =
+    presses
+    |> list.map(fn(press) {
+      let assert Ok(lights_to_inc) = dict.get(button_map, press)
+      lights_to_inc
+    })
+
+  list.fold(
+    over: lights_to_inc,
+    from: initial,
+    with: toggle_lights_from_button_press,
+  )
 }
 
 fn toggle_lights_from_button_press(
@@ -246,3 +219,11 @@ pub fn format_machine_description(md: MachineDescription) -> String {
   let lights = glearray.to_list(lights)
   pprint.format(lights) <> "\n" <> pprint.format(buttons)
 }
+// // choose some stuff.
+// [0], [1], [2]
+// done? -> Keep
+// blown? -> drop
+// Run check. Are we done?
+//   Yes -> Woop de fuckin' do
+//   No -> add another of all the buttons, back to the start... By which we mean... call the function again with a different base
+// // Check if blown

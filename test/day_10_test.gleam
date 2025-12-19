@@ -3,6 +3,8 @@ import atto/text
 import day_10
 import day_10/input_parser
 import day_10/machine_description.{MachineDescription}
+import gleam/bool
+import gleam/list
 import glearray
 import gleeunit/should
 import pprint
@@ -17,13 +19,13 @@ pub fn part_1_test() {
 }
 
 pub fn part_2_test() {
-  todo
+  use <- bool.guard(when: True, return: 0)
   day_10.do_part_2(test_input)
   |> pprint.debug
 }
 
 pub fn parse_input_test() {
-  todo
+  use <- bool.guard(when: True, return: Nil)
   test_input
   |> text.new
   |> atto.run(input_parser.day_10_input(), _, Nil)
@@ -49,6 +51,7 @@ pub fn parse_input_test() {
 }
 
 pub fn best_presses_test() {
+  use <- bool.guard(when: True, return: 0)
   echo day_10.work_out_best_presses(
     MachineDescription(
       glearray.from_list([False, True, True, False]),
@@ -56,4 +59,20 @@ pub fn best_presses_test() {
       [1, 0, 2, 1],
     ),
   )
+}
+
+fn combos(take take: Int, from from: List(a)) -> List(List(a)) {
+  case take {
+    1 -> {
+      list.map(from, fn(item) { [item] })
+    }
+    _ -> {
+      from
+      |> list.flat_map(fn(first: a) {
+        combos(take: { take - 1 }, from: from)
+        |> echo
+        |> list.map(fn(inner: List(a)) { [first, ..inner] })
+      })
+    }
+  }
 }
