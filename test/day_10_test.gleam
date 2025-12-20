@@ -19,8 +19,7 @@ pub fn part_1_test() {
 }
 
 pub fn part_2_test() {
-  use <- bool.guard(when: True, return: 0)
-  day_10.do_part_2(test_input)
+  day_10.do_part_2("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}")
   |> pprint.debug
 }
 
@@ -51,8 +50,8 @@ pub fn parse_input_test() {
 }
 
 pub fn best_presses_test() {
-  use <- bool.guard(when: True, return: 0)
-  echo day_10.work_out_best_presses(
+  echo day_10.get_lowest_presses_for_joltage(
+    [],
     MachineDescription(
       glearray.from_list([False, True, True, False]),
       [[3], [1, 3], [2], [2, 3], [0, 2], [0, 1]],

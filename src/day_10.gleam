@@ -9,6 +9,7 @@ import gleam/list.{Continue, Stop}
 import gleam/option.{None, Some}
 import gleam/order
 import gleam/result
+import gleam/string
 import glearray.{type Array}
 import pprint
 import simplifile
@@ -35,18 +36,8 @@ pub fn do_part_2(input: String) -> Int {
   let assert Ok(mds) =
     atto.run(input_parser.day_10_input(), text.new(input), Nil)
   mds
-  |> list.map(work_out_best_presses)
+  |> list.map(get_lowest_presses_for_joltage([], _))
   |> int.sum
-}
-
-pub fn work_out_best_presses(machine: MachineDescription) -> Int {
-  let initial_joltage =
-    list.index_map(machine.joltage, fn(_, idx) { #(idx, 0) })
-    |> dict.from_list
-  case do_work_out_best_presses(Running(0), machine, initial_joltage, []) {
-    Done(presses) -> presses
-    _ -> panic as "This should not happen"
-  }
 }
 
 pub type State {
@@ -70,73 +61,45 @@ fn increment_presses(state: State) -> State {
   }
 }
 
-fn do_work_out_best_presses(
-  presses_state: State,
-  machine: MachineDescription,
-  joltage: Dict(Int, Int),
-  chosen: List(Int),
-) -> State {
-  let desired =
-    list.index_map(machine.joltage, fn(item, idx) { #(idx, item) })
-    |> dict.from_list
-  use <- bool.lazy_guard(when: desired == joltage, return: fn() {
-    echo Done(get_presses(presses_state))
-  })
-  use <- bool.lazy_guard(when: blown(joltage, desired), return: fn() {
-    echo Blown
-  })
+fn increment_joltages(
+  current: Dict(Int, Int),
+  press: Int,
+  button_map: Dict(Int, List(Int)),
+) -> Dict(Int, Int) {
+  let assert Ok(to_increment) = dict.get(button_map, press)
 
-  echo chosen as "Continuing..."
-  let new_state = increment_presses(presses_state)
-  // Press all in turn and descend in.
-  let result =
-    machine.buttons
-    |> list.index_map(fn(effects, idx) {
-      let new_chosen = [idx, ..chosen]
-      let joltages_after_press =
-        list.fold(from: joltage, over: effects, with: increment_joltages)
-      do_work_out_best_presses(
-        new_state,
-        machine,
-        joltages_after_press,
-        new_chosen,
-      )
-    })
-    |> list.filter(fn(state) {
-      case state {
-        Done(_) -> True
-        _ -> False
+  list.fold(over: to_increment, from: current, with: fn(acc, idx) {
+    dict.upsert(acc, idx, fn(entry) {
+      case entry {
+        None ->
+          panic as {
+            "We should always be incrementing a thing already there "
+            <> string.inspect(current)
+            <> string.inspect(idx)
+          }
+        Some(joltage) -> joltage + 1
       }
     })
-    |> list.sort(fn(a, b) {
-      let a = get_presses(a)
-      let b = get_presses(b)
-      order.reverse(int.compare)(a, b)
-    })
-    |> list.first
-
-  case result {
-    Error(Nil) -> Blown
-    Ok(inner) -> inner
-  }
-}
-
-fn increment_joltages(current: Dict(Int, Int), to_inc: Int) -> Dict(Int, Int) {
-  dict.upsert(current, to_inc, fn(entry) {
-    case entry {
-      None -> panic as "We should always be incrementing a thing already there"
-      Some(joltage) -> joltage + 1
-    }
   })
 }
 
-fn blown(current: Dict(Int, Int), desired: Dict(Int, Int)) -> Bool {
+fn blown(current: Dict(Int, Int), desired: List(Int)) -> Bool {
+  let desired =
+    list.index_map(desired, fn(item, idx) { #(idx, item) })
+    |> dict.from_list
   let assert Ok(zipped) =
     list.strict_zip(dict.to_list(current), dict.to_list(desired))
   list.any(in: zipped, satisfying: fn(item) {
     let #(#(_, current), #(_, desired)) = item
     current > desired
   })
+}
+
+fn done(current: Dict(Int, Int), desired: List(Int)) -> Bool {
+  let desired =
+    list.index_map(desired, fn(item, idx) { #(idx, item) })
+    |> dict.from_list
+  desired == current
 }
 
 fn find_best(md: MachineDescription) -> Int {
@@ -166,7 +129,6 @@ fn attempt_solution_with_n_presses(
   let button_map =
     list.index_map(buttons, fn(item, idx) { #(idx, item) })
     |> dict.from_list
-    |> echo
   list.combinations(
     list.range(from: 0, to: { dict.size(button_map) - 1 }),
     to_take,
@@ -219,6 +181,7 @@ pub fn format_machine_description(md: MachineDescription) -> String {
   let lights = glearray.to_list(lights)
   pprint.format(lights) <> "\n" <> pprint.format(buttons)
 }
+
 // // choose some stuff.
 // [0], [1], [2]
 // done? -> Keep
@@ -227,3 +190,80 @@ pub fn format_machine_description(md: MachineDescription) -> String {
 //   Yes -> Woop de fuckin' do
 //   No -> add another of all the buttons, back to the start... By which we mean... call the function again with a different base
 // // Check if blown
+
+pub fn get_lowest_presses_for_joltage(
+  current_presses: List(List(Int)),
+  machine: MachineDescription,
+) -> Int {
+  let to_check: List(List(Int)) =
+    generate_button_combinations(current_presses, machine)
+  let sans_blown =
+    to_check
+    |> list.filter_map(fn(combo) {
+      let after = apply_button_combination_to_machine(combo, machine)
+      case blown(after, machine.joltage) {
+        True -> Error(Nil)
+        False -> {
+          Ok(combo)
+        }
+      }
+    })
+  let found =
+    list.find(sans_blown, fn(combo) {
+      let after = apply_button_combination_to_machine(combo, machine)
+      done(after, machine.joltage)
+    })
+
+  use <- bool.lazy_guard(when: list.length(sans_blown) == 0, return: fn() {
+    panic as "Whatw"
+  })
+  case found {
+    Ok(inner) -> {
+      echo "Found a thing, it was " <> string.inspect(inner)
+      list.length(inner)
+    }
+    Error(_) -> {
+      // DIVE DIVE
+      get_lowest_presses_for_joltage(sans_blown, machine)
+    }
+  }
+}
+
+fn generate_button_combinations(
+  current: List(List(Int)),
+  machine: MachineDescription,
+) -> List(List(Int)) {
+  let button_range = button_range(machine)
+  case current {
+    [] -> list.map(button_range, fn(button) { [button] })
+    combos ->
+      combos
+      |> list.flat_map(fn(presses) {
+        button_range
+        |> list.map(fn(new_button) { [new_button, ..presses] })
+      })
+  }
+}
+
+fn apply_button_combination_to_machine(
+  combination: List(Int),
+  machine: MachineDescription,
+) -> Dict(Int, Int) {
+  let initial_joltage =
+    list.range(0, list.length(machine.joltage) - 1)
+    |> list.index_map(fn(_, idx) { #(idx, 0) })
+    |> dict.from_list
+
+  list.fold(over: combination, from: initial_joltage, with: fn(acc, press) {
+    increment_joltages(acc, press, button_map(machine))
+  })
+}
+
+fn button_range(machine: MachineDescription) -> List(Int) {
+  list.range(from: 0, to: list.length(machine.buttons) - 1)
+}
+
+fn button_map(machine: MachineDescription) -> Dict(Int, List(Int)) {
+  list.index_map(machine.buttons, fn(item, idx) { #(idx, item) })
+  |> dict.from_list
+}

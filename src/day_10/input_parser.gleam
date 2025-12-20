@@ -50,7 +50,8 @@ fn buttons() {
       atto.token(")") |> text_util.ws(),
     )
 
-  ops.sep1(button, text_util.hspaces())
+  use as_list <- atto.do(ops.sep1(button, text_util.hspaces()))
+  list.index_map(as_list)
 }
 
 fn joltage() {
