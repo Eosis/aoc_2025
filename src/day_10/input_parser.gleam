@@ -2,6 +2,7 @@ import atto
 import atto/ops
 import atto/text_util
 import day_10/machine_description.{MachineDescription}
+import gleam/dict
 import gleam/list
 import glearray
 
@@ -9,7 +10,7 @@ pub fn day_10_input() {
   ops.many(machine_description())
 }
 
-fn machine_description() {
+pub fn machine_description() {
   use <- atto.label("Machine Description")
   use lights <- atto.do(lights())
   use buttons <- atto.do(buttons())
@@ -51,17 +52,24 @@ fn buttons() {
     )
 
   use as_list <- atto.do(ops.sep1(button, text_util.hspaces()))
-  list.index_map(as_list)
+  list.index_map(as_list, fn(item, idx) { #(idx, item) })
+  |> dict.from_list
+  |> atto.pure
 }
 
 fn joltage() {
   use <- atto.label("Joltage")
-  ops.between(
-    atto.token("{") |> text_util.ws(),
-    ops.sep1(
-      text_util.decimal() |> text_util.ws(),
-      atto.token(",") |> text_util.ws(),
-    ),
-    atto.token("}") |> text_util.ws(),
-  )
+  let as_list =
+    ops.between(
+      atto.token("{") |> text_util.ws(),
+      ops.sep1(
+        text_util.decimal() |> text_util.ws(),
+        atto.token(",") |> text_util.ws(),
+      ),
+      atto.token("}") |> text_util.ws(),
+    )
+  use as_list <- atto.do(as_list)
+  list.index_map(as_list, fn(item, idx) { #(idx, item) })
+  |> dict.from_list
+  |> atto.pure
 }
