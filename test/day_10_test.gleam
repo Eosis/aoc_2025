@@ -18,12 +18,12 @@ pub fn part_1_test() {
   |> should.equal(7)
 }
 
-// pub fn part_2_test() {
-//   day_10.do_part_2(
-//     "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}",
-//   )
-//   |> pprint.debug
-// }
+pub fn part_2_test() {
+  day_10.do_part_2(
+    "[####..##..] (0,4,5,6,7,9) (0,2,4,6,9) (0,1,2,3,5,6,7,8) (1,9) (0,1,3,4,5,6,7,8) (0,1,3,7,9) (3,7) (1,3,4,6,7,9) (1,2,3,4,5,7,8,9) (0,1,2,6,8) (0,1,2,4,8,9) (0,1,2,7,8,9) (1,3,5,7,8) {211,227,193,67,188,46,42,85,204,212}",
+  )
+  |> pprint.debug
+}
 
 pub fn parse_input_test() {
   test_input
@@ -212,5 +212,5 @@ pub fn find_lowest_number_required_test() {
       ]),
     )
   day_10.find_lowest_number_required(md)
-  |> echo
+  |> should.equal(10)
 }

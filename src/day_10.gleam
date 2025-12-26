@@ -301,30 +301,43 @@ fn find_lowest_number_required_loop(
   io.println_error(
     "Getting Minimum for: " <> format_machine_description(machine),
   )
-  let most_restricted_joltage_idx = echo most_restricted_joltage(machine)
+  let most_restricted_joltage_idx = most_restricted_joltage(machine)
+  io.println_error(
+    "Mst restricted joltage idx is "
+    <> int.to_string(most_restricted_joltage_idx),
+  )
   let assert Ok(most_restricted_joltage_value) =
     dict.get(machine.joltage, most_restricted_joltage_idx)
   let pressable =
     echo joltage_to_applicable_buttons(most_restricted_joltage_idx, machine)
+      as "Could press"
   let possible_combos =
     distribute_presses(most_restricted_joltage_value, pressable)
   let possible_remaining_joltages =
     possible_combos
     |> list.filter_map(decrement_joltage_from_presses(_, machine))
-    |> pprint.debug
+    |> echo as "possible remaining"
 
   let possible_remaining_machines =
     possible_remaining_joltages
     |> list.map(fn(remaining_joltage) {
       // The problem is that we need to eliminate the other zero joltages... Otherwise algo attempts
-      
-      eliminate_joltage(
-        MachineDescription(..machine, joltage: remaining_joltage),
-        most_restricted_joltage_idx,
-      )
+      let to_elims: List(Int) =
+        dict.to_list(remaining_joltage)
+        |> list.filter_map(fn(item) {
+          let #(key, value) = item
+          case value {
+            0 -> Ok(key)
+            _ -> Error(Nil)
+          }
+        })
+      let new_machine =
+        MachineDescription(..machine, joltage: remaining_joltage)
+      list.fold(over: to_elims, from: new_machine, with: fn(acc, to_elim) {
+        eliminate_joltage(acc, to_elim)
+      })
     })
 
-  pprint.debug(possible_remaining_machines)
   list.filter_map(possible_remaining_machines, find_lowest_number_required_loop(
     acc + most_restricted_joltage_value,
     _,
@@ -349,8 +362,6 @@ pub fn decrement_joltage_from_presses(
   presses: Dict(Int, Int),
   machine: MachineDescription,
 ) -> Result(Dict(Int, Int), Nil) {
-  echo presses
-  echo machine
   let after_presses =
     dict.fold(
       from: machine.joltage,
@@ -367,8 +378,8 @@ pub fn decrement_joltage_from_presses(
     |> list.any(fn(joltage) { joltage < 0 })
 
   case blown {
-    True -> echo Error(Nil)
-    False -> echo Ok(after_presses)
+    True -> Error(Nil)
+    False -> Ok(after_presses)
   }
 }
 
