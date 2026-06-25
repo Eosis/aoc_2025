@@ -65,7 +65,8 @@ pub fn generate_list_to_test(input: List(Range)) -> List(Int) {
   input
   |> list.flat_map(fn(range) -> List(Int) {
     let Range(start:, end:) = range
-    list.range(start, end)
+    int.range(from: start, to: end + 1, with: [], run: list.prepend)
+    |> list.reverse
   })
 }
 
@@ -98,7 +99,8 @@ pub fn at_least_doubly_repeaty(input: Int) -> Bool {
 }
 
 pub fn prefixes_til_half(input: String) -> List(String) {
-  list.range(1, string.length(input) / 2)
+  int.range(from: 1, to: string.length(input) / 2 + 1, with: [], run: list.prepend)
+  |> list.reverse
   |> list.map(fn(to_take) { string.slice(input, at_index: 0, length: to_take) })
 }
 

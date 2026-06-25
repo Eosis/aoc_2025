@@ -13,7 +13,7 @@ version = "1.0.0"
 # https://gleam.run/writing-gleam/gleam-toml/.
 
 [dependencies]
-gleam_stdlib = ">= 0.34.0 and < 2.0.0"
+gleam_stdlib = { git = "https://github.com/gleam-lang/stdlib", ref = "main" }
 simplifile = ">= 2.3.1 and < 3.0.0"
 pprint = ">= 1.0.6 and < 2.0.0"
 gleam_regexp = ">= 1.1.1 and < 2.0.0"

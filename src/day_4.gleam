@@ -1,5 +1,6 @@
 import gleam.{type Int}
 import gleam/dict.{type Dict}
+import gleam/int
 import gleam/list
 import gleam/string
 import simplifile
@@ -69,9 +70,11 @@ pub type Floor {
 
 fn generate_locations_to_check(floor: Floor) -> List(#(Int, Int)) {
   let Floor(locations:, bounds: #(y_bound, x_bound)) = floor
-  list.range(0, y_bound - 1)
+  int.range(from: 0, to: y_bound, with: [], run: list.prepend)
+  |> list.reverse
   |> list.flat_map(fn(y) {
-    list.range(0, x_bound - 1)
+    int.range(from: 0, to: x_bound, with: [], run: list.prepend)
+    |> list.reverse
     |> list.map(fn(x) { #(y, x) })
   })
   |> list.filter(fn(location) {

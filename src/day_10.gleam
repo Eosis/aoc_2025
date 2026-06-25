@@ -118,7 +118,8 @@ fn find_best(md: MachineDescription) -> Int {
   let MachineDescription(_, lights: desired_lights, buttons:) = md
 
   // fold until one found
-  list.range(1, dict.size(buttons))
+  int.range(from: 1, to: dict.size(buttons) + 1, with: [], run: list.prepend)
+  |> list.reverse
   |> list.fold_until(
     from: Error(Nil),
     with: fn(found: Result(Int, Nil), to_take: Int) {
@@ -139,7 +140,8 @@ fn attempt_solution_with_n_presses(
   machine: MachineDescription,
 ) -> Bool {
   list.combinations(
-    list.range(from: 0, to: { dict.size(machine.buttons) - 1 }),
+    int.range(from: 0, to: dict.size(machine.buttons), with: [], run: list.prepend)
+    |> list.reverse,
     to_take,
   )
   |> list.map(apply_button_presses(_, glearray.length(desired), machine))
@@ -152,7 +154,8 @@ fn apply_button_presses(
   machine: MachineDescription,
 ) -> Array(Bool) {
   let initial: Array(Bool) =
-    list.range(1, number_of_lights)
+    int.range(from: 1, to: number_of_lights + 1, with: [], run: list.prepend)
+    |> list.reverse
     |> list.map(fn(_) { False })
     |> glearray.from_list
   let lights_to_inc =
@@ -252,7 +255,8 @@ fn apply_button_combination_to_machine(
   machine: MachineDescription,
 ) -> Dict(Int, Int) {
   let initial_joltage =
-    list.range(0, dict.size(machine.joltage) - 1)
+    int.range(from: 0, to: dict.size(machine.joltage), with: [], run: list.prepend)
+    |> list.reverse
     |> list.index_map(fn(_, idx) { #(idx, 0) })
     |> dict.from_list
 
@@ -262,7 +266,8 @@ fn apply_button_combination_to_machine(
 }
 
 fn button_range(machine: MachineDescription) -> List(Int) {
-  list.range(from: 0, to: dict.size(machine.buttons) - 1)
+  int.range(from: 0, to: dict.size(machine.buttons), with: [], run: list.prepend)
+  |> list.reverse
 }
 
 // Set first target, which should be the lowest number in the joltage map
@@ -367,7 +372,9 @@ pub fn decrement_joltage_from_presses(
       from: machine.joltage,
       over: presses,
       with: fn(joltages, button, times) {
-        let times = list.range(1, times)
+        let times =
+          int.range(from: 1, to: times + 1, with: [], run: list.prepend)
+          |> list.reverse
         list.fold(over: times, from: joltages, with: fn(acc, _val) {
           decrement_joltages(acc, button, machine)
         })
