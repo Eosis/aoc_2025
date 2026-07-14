@@ -1,7 +1,10 @@
+import gleam/bool
+import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
 import gleam/set.{type Set}
 import gleam/string
+import rememo/memo
 import simplifile
 
 pub fn part_1() -> Int {
@@ -10,7 +13,8 @@ pub fn part_1() -> Int {
 }
 
 pub fn part_2() -> Int {
-  todo
+  let assert Ok(input) = simplifile.read("./inputs/day_7.txt")
+  do_part_2(input)
 }
 
 pub type SplittingState {
@@ -48,11 +52,30 @@ pub fn do_part_1(input: String) -> Int {
 }
 
 pub fn do_part_2(input: String) -> Int {
-  todo
+  let description = parse_input(input)
+  use count_paths_memo <- memo()
+  count_paths(description.start, 0, description, dict.new())
 }
 
-pub fn test_part_1() {
-  todo
+fn count_paths(
+  x_offset: Int,
+  y_offset: Int,
+  description: SplitterDescription,
+) -> Int {
+  let SplitterDescription(start: _, splitters:, depth:) = description
+  use <- bool.guard(y_offset > depth, 1)
+
+  case
+    splitters
+    |> set.contains(#(y_offset, x_offset))
+  {
+    False -> count_paths(x_offset, y_offset + 1, description)
+    True -> {
+      let left = count_paths(x_offset - 1, y_offset + 1, description)
+      let right = count_paths(x_offset + 1, y_offset + 1, description)
+      left + right
+    }
+  }
 }
 
 pub type SplitterDescription {
